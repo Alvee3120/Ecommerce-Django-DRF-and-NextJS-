@@ -1,7 +1,9 @@
 import Link from "next/link";
 
+import { HeroSlider, type HeroSlide } from "@/components/home/hero-slider";
+import { TrustBadges } from "@/components/home/trust-badges";
 import { ProductCard } from "@/components/product-card";
-import { getCategoryTree, getProducts } from "@/lib/data";
+import { getCategoryTree, getProducts, getSiteSettings } from "@/lib/data";
 
 export default async function HomePage({
   searchParams,
@@ -9,46 +11,63 @@ export default async function HomePage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const [categoryTree, products] = await Promise.all([
+  const [settings, categoryTree, products] = await Promise.all([
+    getSiteSettings(),
     getCategoryTree(),
     getProducts({ search: q }),
   ]);
 
+  const eyebrow = settings.site_name.toUpperCase();
+  const slides: HeroSlide[] = [
+    { eyebrow, titleLines: ["Autumn", "& Winter 2024"], cta: "Shop Now", href: "/" },
+    { eyebrow, titleLines: ["Spring Summer", "Collection"], cta: "Shop Now", href: "/" },
+    { eyebrow, titleLines: ["New", "Arrivals"], cta: "Shop Now", href: "/" },
+  ];
+
   return (
-    <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
+    <div>
       {!q && (
-        <section>
-          <h1 className="mb-4 text-2xl font-semibold">Shop by category</h1>
-          <div className="flex flex-wrap gap-3">
-            {categoryTree.results.map((category) => (
-              <Link
-                key={category.id}
-                href={`/category/${category.slug}`}
-                className="rounded-full border px-4 py-2 text-sm hover:bg-accent"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </div>
-        </section>
+        <>
+          <HeroSlider slides={slides} />
+          <TrustBadges />
+        </>
       )}
 
-      <section>
-        <h2 className="mb-4 text-xl font-semibold">
-          {q ? `Search results for "${q}"` : "All products"}
-        </h2>
-        {products.results.length === 0 ? (
-          <p className="text-muted-foreground">
-            {q ? "No products matched your search." : "No products yet."}
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {products.results.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+      <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
+        {!q && (
+          <section>
+            <h2 className="mb-4 text-2xl font-semibold">Shop by category</h2>
+            <div className="flex flex-wrap gap-3">
+              {categoryTree.results.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/category/${category.slug}`}
+                  className="rounded-full border px-4 py-2 text-sm hover:bg-accent"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
-      </section>
+
+        <section>
+          <h2 className="mb-4 text-xl font-semibold">
+            {q ? `Search results for "${q}"` : "All products"}
+          </h2>
+          {products.results.length === 0 ? (
+            <p className="text-muted-foreground">
+              {q ? "No products matched your search." : "No products yet."}
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {products.results.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
