@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { HeroSlider, type HeroSlide } from "@/components/home/hero-slider";
+import { ProductTabsSection } from "@/components/home/product-tabs-section";
 import { TrustBadges } from "@/components/home/trust-badges";
 import { ProductCard } from "@/components/product-card";
 import { getCategoryTree, getProducts, getSiteSettings } from "@/lib/data";
@@ -51,22 +52,22 @@ export default async function HomePage({
           </section>
         )}
 
-        <section>
-          <h2 className="mb-4 text-xl font-semibold">
-            {q ? `Search results for "${q}"` : "All products"}
-          </h2>
-          {products.results.length === 0 ? (
-            <p className="text-muted-foreground">
-              {q ? "No products matched your search." : "No products yet."}
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {products.results.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-        </section>
+        {q ? (
+          <section>
+            <h2 className="mb-4 text-xl font-semibold">Search results for &quot;{q}&quot;</h2>
+            {products.results.length === 0 ? (
+              <p className="text-muted-foreground">No products matched your search.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {products.results.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (
+          <ProductTabsSection heading="Trendy item" products={products.results} />
+        )}
       </div>
     </div>
   );

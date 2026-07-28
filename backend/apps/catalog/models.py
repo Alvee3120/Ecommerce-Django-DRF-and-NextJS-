@@ -59,6 +59,12 @@ class Product(SEOModel, TimeStampedModel):
         BASE = "base", "Base"
         VARIABLE = "variable", "Variable"
 
+    class Badge(models.TextChoices):
+        NONE = "", "None"
+        HOT = "hot", "Hot"
+        NEW = "new", "New"
+        SALE = "sale", "Sale"
+
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     product_type = models.CharField(
@@ -66,6 +72,7 @@ class Product(SEOModel, TimeStampedModel):
     )
     categories = models.ManyToManyField(Category, related_name="products", blank=True)
     sku = models.CharField(max_length=100, blank=True)
+    badge = models.CharField(max_length=10, choices=Badge.choices, blank=True, default=Badge.NONE)
 
     # Only used when product_type == BASE; VARIABLE products price/stock
     # their ProductVariations individually instead.

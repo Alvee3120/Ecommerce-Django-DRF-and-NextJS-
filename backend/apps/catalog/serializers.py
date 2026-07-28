@@ -94,6 +94,10 @@ class ProductListSerializer(serializers.ModelSerializer):
     categories = serializers.SlugRelatedField(slug_field="slug", many=True, read_only=True)
     effective_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     primary_image = serializers.SerializerMethodField()
+    images = ProductImageSerializer(many=True, read_only=True)
+    colors = serializers.SerializerMethodField()
+    sizes = serializers.SerializerMethodField()
+    starting_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -106,9 +110,14 @@ class ProductListSerializer(serializers.ModelSerializer):
             "regular_price",
             "discount_price",
             "effective_price",
+            "starting_price",
             "stock",
             "is_active",
+            "badge",
             "primary_image",
+            "images",
+            "colors",
+            "sizes",
         )
 
     def get_primary_image(self, obj):
@@ -119,9 +128,31 @@ class ProductListSerializer(serializers.ModelSerializer):
         url = first_image.image.url
         return request.build_absolute_uri(url) if request else url
 
+    def _active_variations(self, obj):
+        return [v for v in obj.variations.all() if v.is_active]
+
+    def _attribute_values(self, obj, attribute_name):
+        seen = {}
+        for variation in self._active_variations(obj):
+            for av in variation.attribute_values.all():
+                if av.attribute.name.lower() == attribute_name and av.value not in seen:
+                    seen[av.value] = True
+        return list(seen.keys())
+
+    def get_colors(self, obj):
+        return self._attribute_values(obj, "color")
+
+    def get_sizes(self, obj):
+        return self._attribute_values(obj, "size")
+
+    def get_starting_price(self, obj):
+        if obj.product_type == Product.ProductType.BASE:
+            return None
+        prices = [v.effective_price for v in self._active_variations(obj)]
+        return min(prices) if prices else None
+
 
 class ProductDetailSerializer(ProductListSerializer):
-    images = ProductImageSerializer(many=True, read_only=True)
     variations = ProductVariationSerializer(many=True, read_only=True)
 
     class Meta(ProductListSerializer.Meta):
@@ -129,6 +160,5 @@ class ProductDetailSerializer(ProductListSerializer):
             "description",
             "meta_title",
             "meta_description",
-            "images",
             "variations",
         )

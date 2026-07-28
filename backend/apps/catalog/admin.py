@@ -75,8 +75,8 @@ class ProductVariationInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "product_type", "regular_price", "stock", "is_active")
-    list_filter = ("product_type", "is_active", "categories")
+    list_display = ("name", "product_type", "regular_price", "stock", "badge", "is_active")
+    list_filter = ("product_type", "is_active", "badge", "categories")
     search_fields = ("name", "slug", "sku")
     prepopulated_fields = {"slug": ("name",)}
     filter_horizontal = ("categories",)

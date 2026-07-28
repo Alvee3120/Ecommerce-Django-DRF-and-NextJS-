@@ -68,6 +68,8 @@ export interface ProductVariation {
 
 export type ProductType = "base" | "variable";
 
+export type ProductBadge = "" | "hot" | "new" | "sale";
+
 export interface ProductList {
   id: number;
   name: string;
@@ -77,16 +79,20 @@ export interface ProductList {
   regular_price: string | null;
   discount_price: string | null;
   effective_price: string | null;
+  starting_price: string | null;
   stock: number | null;
   is_active: boolean;
+  badge: ProductBadge;
   primary_image: string | null;
+  images: ProductImage[];
+  colors: string[];
+  sizes: string[];
 }
 
 export interface ProductDetail extends ProductList {
   description: string;
   meta_title: string;
   meta_description: string;
-  images: ProductImage[];
   variations: ProductVariation[];
 }
 
