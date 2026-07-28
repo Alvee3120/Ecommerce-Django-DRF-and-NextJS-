@@ -1,3 +1,11 @@
-from django.shortcuts import render
+from rest_framework.generics import RetrieveAPIView
 
-# Create your views here.
+from .models import SiteSettings
+from .serializers import SiteSettingsSerializer
+
+
+class SiteSettingsView(RetrieveAPIView):
+    serializer_class = SiteSettingsSerializer
+
+    def get_object(self):
+        return SiteSettings.load()
