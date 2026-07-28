@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Jost } from "next/font/google";
 import "./globals.css";
 
 import { PopupLauncher } from "@/components/popup-launcher";
 import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { SiteHeader } from "@/components/header/site-header";
 import { contrastColor } from "@/lib/color";
 import { getCategoryTree, getSiteSettings } from "@/lib/data";
 
 import { Providers } from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jostSans = Jost({
+  variable: "--font-jost",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -46,7 +47,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${jostSans.variable} ${geistMono.variable} h-full antialiased`}
       style={themeStyle}
     >
       <body className="flex min-h-full flex-col">
