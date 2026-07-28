@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { HeroSlider, type HeroSlide } from "@/components/home/hero-slider";
 import { ProductTabsSection } from "@/components/home/product-tabs-section";
+import { PromoBanner } from "@/components/home/promo-banner";
 import { TrustBadges } from "@/components/home/trust-badges";
 import { ProductCard } from "@/components/product-card";
 import { getCategoryTree, getProducts, getSiteSettings } from "@/lib/data";
@@ -66,7 +67,10 @@ export default async function HomePage({
             )}
           </section>
         ) : (
-          <ProductTabsSection heading="Trendy item" products={products.results} />
+          <>
+            <ProductTabsSection heading="Trendy item" products={products.results} />
+            <PromoBanner />
+          </>
         )}
       </div>
     </div>
