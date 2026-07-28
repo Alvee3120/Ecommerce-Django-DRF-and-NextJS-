@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { HeroSlider, type HeroSlide } from "@/components/home/hero-slider";
+import { InstagramFollow } from "@/components/home/instagram-follow";
 import { ProductHighlights } from "@/components/home/product-highlights";
 import { ProductTabsSection } from "@/components/home/product-tabs-section";
 import { PromoBanner } from "@/components/home/promo-banner";
@@ -98,6 +99,8 @@ export default async function HomePage({
           </>
         )}
       </div>
+
+      {!q && <InstagramFollow handle={settings.site_name.toUpperCase()} />}
     </div>
   );
 }
