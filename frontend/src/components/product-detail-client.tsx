@@ -152,8 +152,11 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
           ))}
 
         <div className="flex items-center gap-3">
-          <label className="text-sm font-medium">Qty</label>
+          <label htmlFor="quantity" className="text-sm font-medium">
+            Qty
+          </label>
           <Input
+            id="quantity"
             type="number"
             min={1}
             max={Math.max(activeStock, 1)}
