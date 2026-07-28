@@ -22,6 +22,7 @@ urlpatterns = [
     path("api/", include("apps.core.urls")),
     path("api/", include("apps.catalog.urls")),
     path("api/", include("apps.orders.urls")),
+    path("api/", include("apps.coupons.urls")),
 ]
 
 if settings.DEBUG:

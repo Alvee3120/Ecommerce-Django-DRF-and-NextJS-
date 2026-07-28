@@ -35,6 +35,13 @@ class Order(models.Model):
 
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
 
+    coupon = models.ForeignKey(
+        "coupons.Coupon",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+    )
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2)

@@ -5,6 +5,7 @@ from django.db.models import F
 from rest_framework import serializers
 
 from apps.catalog.models import Product, ProductVariation
+from apps.coupons.models import Coupon
 
 from .models import Order, OrderItem, OrderStatusHistory
 
@@ -24,6 +25,7 @@ class OrderStatusHistorySerializer(serializers.ModelSerializer):
 class OrderDetailSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     status_history = OrderStatusHistorySerializer(many=True, read_only=True)
+    coupon_code = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -39,6 +41,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             "state_region",
             "postal_code",
             "country",
+            "coupon_code",
             "subtotal",
             "discount_amount",
             "total",
@@ -46,6 +49,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             "status_history",
             "created_at",
         )
+
+    def get_coupon_code(self, obj):
+        return obj.coupon.code if obj.coupon_id else None
 
 
 class CheckoutItemInputSerializer(serializers.Serializer):
@@ -64,6 +70,7 @@ class CheckoutSerializer(serializers.Serializer):
     state_region = serializers.CharField(max_length=100, required=False, allow_blank=True)
     postal_code = serializers.CharField(max_length=20, required=False, allow_blank=True)
     country = serializers.CharField(max_length=100)
+    coupon_code = serializers.CharField(required=False, allow_blank=True)
     items = CheckoutItemInputSerializer(many=True)
 
     def validate_items(self, items):
@@ -73,11 +80,14 @@ class CheckoutSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         items_data = validated_data.pop("items")
+        coupon_code = validated_data.pop("coupon_code", "")
 
         with transaction.atomic():
             resolved_items = self._resolve_items(items_data)
 
             subtotal = sum((item["line_total"] for item in resolved_items), Decimal("0"))
+            coupon, discount_amount = self._resolve_coupon(coupon_code, subtotal)
+            total = subtotal - discount_amount
 
             order = Order.objects.create(
                 customer_name=validated_data["customer_name"],
@@ -89,11 +99,15 @@ class CheckoutSerializer(serializers.Serializer):
                 state_region=validated_data.get("state_region", ""),
                 postal_code=validated_data.get("postal_code", ""),
                 country=validated_data["country"],
+                coupon=coupon,
                 subtotal=subtotal,
-                discount_amount=Decimal("0"),
-                total=subtotal,
+                discount_amount=discount_amount,
+                total=total,
             )
             order.status_history.create(status=Order.Status.PENDING)
+
+            if coupon is not None:
+                Coupon.objects.filter(pk=coupon.pk).update(used_count=F("used_count") + 1)
 
             for resolved in resolved_items:
                 OrderItem.objects.create(
@@ -116,6 +130,26 @@ class CheckoutSerializer(serializers.Serializer):
                     )
 
             return order
+
+    def _resolve_coupon(self, coupon_code, subtotal):
+        """
+        Locks the Coupon row (like _resolve_items locks Product/Variation
+        rows) so two concurrent checkouts can't both squeeze past a
+        usage_limit that only has one redemption left.
+        """
+        code = coupon_code.strip().upper() if coupon_code else ""
+        if not code:
+            return None, Decimal("0.00")
+
+        coupon = Coupon.objects.select_for_update().filter(code=code).first()
+        if coupon is None:
+            raise serializers.ValidationError({"coupon_code": "Invalid coupon code."})
+
+        is_valid, discount_amount, message = coupon.validate_for_amount(subtotal)
+        if not is_valid:
+            raise serializers.ValidationError({"coupon_code": message})
+
+        return coupon, discount_amount
 
     def _resolve_items(self, items_data):
         """
