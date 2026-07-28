@@ -3,7 +3,7 @@ import { Geist_Mono, Jost } from "next/font/google";
 import "./globals.css";
 
 import { PopupLauncher } from "@/components/popup-launcher";
-import { SiteFooter } from "@/components/site-footer";
+import { SiteFooter } from "@/components/footer/site-footer";
 import { SiteHeader } from "@/components/header/site-header";
 import { contrastColor } from "@/lib/color";
 import { getCategoryTree, getSiteSettings } from "@/lib/data";
@@ -50,7 +50,7 @@ export default async function RootLayout({
       className={`${jostSans.variable} ${geistMono.variable} h-full antialiased`}
       style={themeStyle}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col pb-16 lg:pb-0">
         <Providers>
           <SiteHeader settings={settings} categories={categoryTree.results} />
           <main className="flex-1">{children}</main>
