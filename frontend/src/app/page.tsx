@@ -33,7 +33,7 @@ export default async function HomePage({
         </>
       )}
 
-      <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
+      <div className="mx-auto max-w-[1200px] space-y-10 px-4 py-8">
         {!q && (
           <section>
             <h2 className="mb-4 text-2xl font-semibold">Shop by category</h2>

@@ -25,7 +25,7 @@ export default async function CategoryPage({
   const products = await getProducts({ category: slug });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+    <div className="mx-auto max-w-[1200px] space-y-8 px-4 py-8">
       <div>
         <h1 className="text-2xl font-semibold">{category.name}</h1>
         {category.children.length > 0 && (

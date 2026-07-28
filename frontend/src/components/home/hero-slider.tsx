@@ -53,7 +53,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           {slides.map((slide) => (
             <CarouselItem key={slide.titleLines.join(" ")} className="pl-0">
               <div className="grid grid-cols-2 items-center bg-neutral-100">
-                <div className="px-6 py-14 sm:px-12 sm:py-20 lg:px-20">
+                <div className="py-14 pr-4 pl-[max(1rem,calc((100vw-1200px)/2+1rem))] sm:py-20 sm:pr-8 lg:pr-12">
                   <p className="mb-3 text-xs font-medium tracking-[0.3em] text-foreground/50 uppercase sm:text-sm">
                     {slide.eyebrow}
                   </p>
@@ -86,7 +86,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         <CarouselNext className="right-4 hidden sm:flex" />
       </Carousel>
 
-      <div className="absolute bottom-4 left-6 flex gap-2 sm:bottom-8 sm:left-12 lg:left-20">
+      <div className="absolute bottom-4 left-[max(1rem,calc((100vw-1200px)/2+1rem))] flex gap-2 sm:bottom-8">
         {slides.map((slide, i) => (
           <button
             key={slide.titleLines.join(" ")}
