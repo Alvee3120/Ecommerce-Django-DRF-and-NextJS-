@@ -83,6 +83,7 @@ export interface ProductList {
   stock: number | null;
   is_active: boolean;
   badge: ProductBadge;
+  average_rating: string | null;
   primary_image: string | null;
   images: ProductImage[];
   colors: string[];

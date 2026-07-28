@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from apps.core.models import SEOModel, TimeStampedModel
@@ -73,6 +74,14 @@ class Product(SEOModel, TimeStampedModel):
     categories = models.ManyToManyField(Category, related_name="products", blank=True)
     sku = models.CharField(max_length=100, blank=True)
     badge = models.CharField(max_length=10, choices=Badge.choices, blank=True, default=Badge.NONE)
+    average_rating = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+        help_text="Admin-set average rating out of 5, until a real review system exists.",
+    )
 
     # Only used when product_type == BASE; VARIABLE products price/stock
     # their ProductVariations individually instead.

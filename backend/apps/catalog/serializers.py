@@ -114,6 +114,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "stock",
             "is_active",
             "badge",
+            "average_rating",
             "primary_image",
             "images",
             "colors",

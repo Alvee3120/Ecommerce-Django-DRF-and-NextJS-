@@ -1,11 +1,15 @@
 import Link from "next/link";
 
 import { HeroSlider, type HeroSlide } from "@/components/home/hero-slider";
+import { ProductHighlights } from "@/components/home/product-highlights";
 import { ProductTabsSection } from "@/components/home/product-tabs-section";
 import { PromoBanner } from "@/components/home/promo-banner";
 import { TrustBadges } from "@/components/home/trust-badges";
 import { ProductCard } from "@/components/product-card";
 import { getCategoryTree, getProducts, getSiteSettings } from "@/lib/data";
+import type { Paginated, ProductList } from "@/lib/types";
+
+const EMPTY_PRODUCTS: Paginated<ProductList> = { count: 0, next: null, previous: null, results: [] };
 
 export default async function HomePage({
   searchParams,
@@ -13,10 +17,13 @@ export default async function HomePage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const [settings, categoryTree, products] = await Promise.all([
+  const [settings, categoryTree, products, topRated, bestSelling, onSale] = await Promise.all([
     getSiteSettings(),
     getCategoryTree(),
     getProducts({ search: q }),
+    q ? Promise.resolve(EMPTY_PRODUCTS) : getProducts({ ordering: "-average_rating", minRating: 0 }),
+    q ? Promise.resolve(EMPTY_PRODUCTS) : getProducts({ ordering: "-sales_count" }),
+    q ? Promise.resolve(EMPTY_PRODUCTS) : getProducts({ onSale: true }),
   ]);
 
   const eyebrow = settings.site_name.toUpperCase();
@@ -70,6 +77,11 @@ export default async function HomePage({
           <>
             <ProductTabsSection heading="Trendy item" products={products.results} />
             <PromoBanner />
+            <ProductHighlights
+              topRated={topRated.results}
+              bestSelling={bestSelling.results}
+              onSale={onSale.results}
+            />
           </>
         )}
       </div>
