@@ -11,11 +11,6 @@ backend/staticfiles/
 backend/media/
 backend/db.sqlite3
 
-# Node / Next.js (frontend, added later)
-node_modules/
-.next/
-frontend/.env*
-
 # Editors / OS
 .DS_Store
 .vscode/
