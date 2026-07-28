@@ -17,14 +17,18 @@ export default async function HomePage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const [settings, categoryTree, products, topRated, bestSelling, onSale] = await Promise.all([
-    getSiteSettings(),
-    getCategoryTree(),
-    getProducts({ search: q }),
-    q ? Promise.resolve(EMPTY_PRODUCTS) : getProducts({ ordering: "-average_rating", minRating: 0 }),
-    q ? Promise.resolve(EMPTY_PRODUCTS) : getProducts({ ordering: "-sales_count" }),
-    q ? Promise.resolve(EMPTY_PRODUCTS) : getProducts({ onSale: true }),
-  ]);
+  const fetchTag = (tag: string) => (q ? Promise.resolve(EMPTY_PRODUCTS) : getProducts({ tag }));
+  const [settings, categoryTree, products, featured, bestSelling, topRated, trends, onSale] =
+    await Promise.all([
+      getSiteSettings(),
+      getCategoryTree(),
+      getProducts({ search: q }),
+      fetchTag("featured"),
+      fetchTag("best-selling"),
+      fetchTag("top-rated"),
+      fetchTag("trends"),
+      fetchTag("on-sale"),
+    ]);
 
   const eyebrow = settings.site_name.toUpperCase();
   const slides: HeroSlide[] = [
@@ -75,7 +79,16 @@ export default async function HomePage({
           </section>
         ) : (
           <>
-            <ProductTabsSection heading="Trendy item" products={products.results} />
+            <ProductTabsSection
+              heading="Trendy item"
+              tabs={[
+                { label: "All", products: products.results },
+                { label: "Featured", products: featured.results },
+                { label: "Best Selling", products: bestSelling.results },
+                { label: "Top Rate", products: topRated.results },
+                { label: "Trends", products: trends.results },
+              ]}
+            />
             <PromoBanner />
             <ProductHighlights
               topRated={topRated.results}

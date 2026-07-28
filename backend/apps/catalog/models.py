@@ -55,6 +55,19 @@ class AttributeValue(models.Model):
         return f"{self.attribute.name}: {self.value}"
 
 
+class Tag(models.Model):
+    """Admin-controlled label for curating homepage collections (Featured, Best Selling, On Sale, ...)."""
+
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
+
+    class Meta:
+        ordering = ("name",)
+
+    def __str__(self):
+        return self.name
+
+
 class Product(SEOModel, TimeStampedModel):
     class ProductType(models.TextChoices):
         BASE = "base", "Base"
@@ -72,6 +85,7 @@ class Product(SEOModel, TimeStampedModel):
         max_length=10, choices=ProductType.choices, default=ProductType.BASE
     )
     categories = models.ManyToManyField(Category, related_name="products", blank=True)
+    tags = models.ManyToManyField(Tag, related_name="products", blank=True)
     sku = models.CharField(max_length=100, blank=True)
     badge = models.CharField(max_length=10, choices=Badge.choices, blank=True, default=Badge.NONE)
     average_rating = models.DecimalField(

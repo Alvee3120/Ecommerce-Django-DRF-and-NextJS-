@@ -92,6 +92,7 @@ class ProductVariationSerializer(serializers.ModelSerializer):
 
 class ProductListSerializer(serializers.ModelSerializer):
     categories = serializers.SlugRelatedField(slug_field="slug", many=True, read_only=True)
+    tags = serializers.SlugRelatedField(slug_field="slug", many=True, read_only=True)
     effective_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     primary_image = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
@@ -107,6 +108,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "slug",
             "product_type",
             "categories",
+            "tags",
             "regular_price",
             "discount_price",
             "effective_price",

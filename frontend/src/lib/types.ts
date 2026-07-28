@@ -76,6 +76,7 @@ export interface ProductList {
   slug: string;
   product_type: ProductType;
   categories: string[];
+  tags: string[];
   regular_price: string | null;
   discount_price: string | null;
   effective_price: string | null;

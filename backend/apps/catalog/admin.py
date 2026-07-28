@@ -8,6 +8,7 @@ from .models import (
     Product,
     ProductImage,
     ProductVariation,
+    Tag,
 )
 
 
@@ -17,6 +18,13 @@ class CategoryAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "parent")
     search_fields = ("name", "slug")
     autocomplete_fields = ("parent",)
+    prepopulated_fields = {"slug": ("name",)}
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug")
+    search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
 
 
@@ -84,8 +92,8 @@ class ProductAdmin(admin.ModelAdmin):
         "average_rating",
         "is_active",
     )
-    list_filter = ("product_type", "is_active", "badge", "categories")
+    list_filter = ("product_type", "is_active", "badge", "categories", "tags")
     search_fields = ("name", "slug", "sku")
     prepopulated_fields = {"slug": ("name",)}
-    filter_horizontal = ("categories",)
+    filter_horizontal = ("categories", "tags")
     inlines = [ProductImageInline, ProductVariationInline]
