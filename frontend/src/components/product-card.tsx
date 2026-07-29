@@ -5,13 +5,8 @@ import Link from "next/link";
 import { useState, type MouseEvent } from "react";
 
 import { useCartStore } from "@/store/cart";
+import { BADGE_STYLES } from "@/lib/badge";
 import type { ProductList } from "@/lib/types";
-
-const BADGE_STYLES: Record<string, string> = {
-  hot: "bg-red-500 text-white",
-  new: "bg-emerald-500 text-white",
-  sale: "bg-primary text-primary-foreground",
-};
 
 const ICON_BUTTON_CLASS =
   "flex h-9 w-9 items-center justify-center rounded-sm bg-white text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground";

@@ -2,15 +2,10 @@
 
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ProductDescriptionSection } from "@/components/product/product-description-section";
+import { ProductGallery } from "@/components/product/product-gallery";
+import { ProductInfoPanel } from "@/components/product/product-info-panel";
+import { ProductReviews } from "@/components/product/product-reviews";
 import { useCartStore } from "@/store/cart";
 import type { AttributeValue, ProductDetail, ProductVariation } from "@/lib/types";
 
@@ -27,7 +22,14 @@ function buildAttributeOptions(variations: ProductVariation[]) {
   return map;
 }
 
-export function ProductDetailClient({ product }: { product: ProductDetail }) {
+export function ProductDetailClient({
+  product: initialProduct,
+  siteUrl,
+}: {
+  product: ProductDetail;
+  siteUrl: string;
+}) {
+  const [product, setProduct] = useState(initialProduct);
   const addItem = useCartStore((state) => state.addItem);
   const isVariable = product.product_type === "variable";
 
@@ -51,6 +53,7 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
 
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const selectedVariation = useMemo(() => {
     if (!isVariable) return null;
@@ -68,14 +71,14 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
   const activeRegularPrice = isVariable
     ? selectedVariation?.regular_price ?? null
     : product.regular_price;
-  const activeImage = isVariable
-    ? selectedVariation?.image ?? product.primary_image
-    : product.primary_image;
+  const activeImage =
+    (isVariable ? selectedVariation?.image : null) ??
+    product.images[galleryIndex]?.image ??
+    product.primary_image;
   const canAddToCart = isVariable ? Boolean(selectedVariation) && activeStock > 0 : activeStock > 0;
 
-  function handleAddToCart() {
-    if (!canAddToCart) return;
-    addItem({
+  function buildCartItem() {
+    return {
       productId: product.id,
       variationId: selectedVariation?.id,
       productSlug: product.slug,
@@ -87,110 +90,77 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
       image: activeImage,
       quantity,
       maxStock: activeStock,
-    });
+    };
+  }
+
+  function handleAddToCart() {
+    if (!canAddToCart) return;
+    addItem(buildCartItem());
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }
 
+  function handleBuyNow() {
+    if (!canAddToCart) return;
+    addItem(buildCartItem());
+    window.location.href = "/checkout";
+  }
+
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-        {activeImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={activeImage} alt={product.name} className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            No image
-          </div>
-        )}
+    <div className="space-y-16">
+      <div className="grid gap-8 md:grid-cols-2">
+        <ProductGallery
+          images={product.images}
+          activeIndex={galleryIndex}
+          onSelectIndex={setGalleryIndex}
+          activeImage={activeImage}
+          productName={product.name}
+          badge={product.badge}
+        />
+
+        <ProductInfoPanel
+          productName={product.name}
+          description={product.description}
+          attributeOptions={attributeOptions}
+          selection={selection}
+          onSelectionChange={(attrSlug, value) =>
+            setSelection((prev) => ({ ...prev, [attrSlug]: value }))
+          }
+          activePrice={activePrice}
+          activeRegularPrice={activeRegularPrice}
+          activeStock={activeStock}
+          quantity={quantity}
+          onQuantityChange={setQuantity}
+          canAddToCart={canAddToCart}
+          added={added}
+          onAddToCart={handleAddToCart}
+          onBuyNow={handleBuyNow}
+          previousSlug={product.previous_slug}
+          nextSlug={product.next_slug}
+          shareUrl={`${siteUrl}/product/${product.slug}`}
+          shareImage={product.primary_image}
+          supportEmail="support@yourstore.com"
+        />
       </div>
 
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold">{product.name}</h1>
-          {product.description && (
-            <p className="mt-2 text-muted-foreground">{product.description}</p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          {activePrice ? (
-            <span className="text-2xl font-semibold">${activePrice}</span>
-          ) : (
-            <span className="text-muted-foreground">Select options to see price</span>
-          )}
-          {activeRegularPrice && activePrice && activeRegularPrice !== activePrice && (
-            <span className="text-lg text-muted-foreground line-through">
-              ${activeRegularPrice}
-            </span>
-          )}
-        </div>
-
-        {isVariable &&
-          Array.from(attributeOptions.entries()).map(([attrSlug, { name, values }]) => (
-            <div key={attrSlug} className="space-y-2">
-              <label className="text-sm font-medium">{name}</label>
-              <Select
-                value={selection[attrSlug]}
-                onValueChange={(value) => {
-                  if (!value) return;
-                  setSelection((prev) => ({ ...prev, [attrSlug]: value }));
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-64">
-                  <SelectValue placeholder={`Choose ${name}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from(values.values()).map((av) => (
-                    <SelectItem key={av.slug} value={av.slug}>
-                      {av.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ))}
-
-        <div className="flex items-center gap-3">
-          <label htmlFor="quantity" className="text-sm font-medium">
-            Qty
-          </label>
-          <Input
-            id="quantity"
-            type="number"
-            min={1}
-            max={Math.max(activeStock, 1)}
-            value={quantity}
-            onChange={(e) =>
-              setQuantity(
-                Math.max(1, Math.min(Number(e.target.value) || 1, Math.max(activeStock, 1)))
-              )
-            }
-            className="w-20"
-          />
-          <span className="text-sm text-muted-foreground">
-            {activeStock > 0 ? `${activeStock} in stock` : "Out of stock"}
+      <div className="flex flex-wrap gap-2 border-t pt-6 text-sm text-muted-foreground">
+        {product.categories.length > 0 && (
+          <span>
+            <span className="font-medium text-foreground">Category:</span>{" "}
+            {product.categories.join(", ")}
           </span>
-        </div>
-
-        <Button size="lg" disabled={!canAddToCart} onClick={handleAddToCart}>
-          {added ? "Added!" : "Add to cart"}
-        </Button>
-
-        {product.images.length > 0 && (
-          <div className="flex gap-3 pt-4">
-            {product.images.map((img) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={img.id}
-                src={img.image}
-                alt={img.alt_text || product.name}
-                className="h-20 w-20 rounded-md object-cover"
-              />
-            ))}
-          </div>
+        )}
+        {product.categories.length > 0 && product.tags.length > 0 && <span>|</span>}
+        {product.tags.length > 0 && (
+          <span>
+            <span className="font-medium text-foreground">Tags:</span> {product.tags.join(", ")}
+          </span>
         )}
       </div>
+
+      <ProductDescriptionSection description={product.description} />
+
+      <ProductReviews product={product} onReviewSubmitted={setProduct} />
     </div>
   );
 }

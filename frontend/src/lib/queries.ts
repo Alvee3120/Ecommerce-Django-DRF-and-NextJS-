@@ -8,6 +8,8 @@ import type {
   CouponValidateResponse,
   Order,
   Popup,
+  ProductDetail,
+  ReviewPayload,
 } from "./types";
 
 export function useActivePopup() {
@@ -28,6 +30,13 @@ export function useValidateCoupon() {
 export function useCheckout() {
   return useMutation({
     mutationFn: (payload: CheckoutPayload) => apiPost<Order>("/orders/", payload),
+  });
+}
+
+export function useSubmitReview(productSlug: string) {
+  return useMutation({
+    mutationFn: (payload: ReviewPayload) =>
+      apiPost<ProductDetail>(`/products/${productSlug}/reviews/`, payload),
   });
 }
 

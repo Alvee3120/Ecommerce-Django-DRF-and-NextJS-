@@ -91,11 +91,30 @@ export interface ProductList {
   sizes: string[];
 }
 
+export interface Review {
+  id: number;
+  reviewer_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+export interface ReviewPayload {
+  reviewer_name: string;
+  rating: number;
+  comment?: string;
+}
+
 export interface ProductDetail extends ProductList {
   description: string;
   meta_title: string;
   meta_description: string;
   variations: ProductVariation[];
+  review_count: number;
+  reviews: Review[];
+  rating_breakdown: Record<string, number>;
+  previous_slug: string | null;
+  next_slug: string | null;
 }
 
 export interface Popup {

@@ -1,5 +1,7 @@
 import django_filters
 from rest_framework import filters, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import Category, Product
 from .serializers import (
@@ -8,6 +10,7 @@ from .serializers import (
     CategoryTreeSerializer,
     ProductDetailSerializer,
     ProductListSerializer,
+    ReviewCreateSerializer,
 )
 
 
@@ -57,3 +60,12 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == "retrieve":
             return ProductDetailSerializer
         return ProductListSerializer
+
+    @action(detail=True, methods=["post"], url_path="reviews")
+    def add_review(self, request, slug=None):
+        product = self.get_object()
+        serializer = ReviewCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(product=product)
+        detail = ProductDetailSerializer(product, context=self.get_serializer_context())
+        return Response(detail.data, status=201)

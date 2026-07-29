@@ -94,8 +94,9 @@ class Product(SEOModel, TimeStampedModel):
         null=True,
         blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Admin-set average rating out of 5, until a real review system exists.",
+        help_text="Recalculated automatically from real reviews once any exist for this product.",
     )
+    review_count = models.PositiveIntegerField(default=0)
 
     # Only used when product_type == BASE; VARIABLE products price/stock
     # their ProductVariations individually instead.
@@ -138,6 +139,12 @@ class Product(SEOModel, TimeStampedModel):
         if self.product_type != self.ProductType.BASE:
             return None
         return self.discount_price if self.discount_price is not None else self.regular_price
+
+    def recalculate_rating(self):
+        agg = self.reviews.aggregate(avg=models.Avg("rating"), count=models.Count("id"))
+        self.review_count = agg["count"] or 0
+        self.average_rating = round(agg["avg"], 1) if agg["avg"] is not None else None
+        self.save(update_fields=["average_rating", "review_count"])
 
 
 class ProductImage(models.Model):
@@ -186,3 +193,28 @@ class ProductVariation(models.Model):
     @property
     def effective_price(self):
         return self.discount_price if self.discount_price is not None else self.regular_price
+
+
+class Review(models.Model):
+    """Guest-submitted review; visible immediately (no moderation queue exists elsewhere in this app either)."""
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
+    reviewer_name = models.CharField(max_length=100)
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.reviewer_name} rated {self.product.name} {self.rating}/5"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.product.recalculate_rating()
+
+    def delete(self, *args, **kwargs):
+        product = self.product
+        super().delete(*args, **kwargs)
+        product.recalculate_rating()

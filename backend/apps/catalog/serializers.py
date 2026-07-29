@@ -1,3 +1,4 @@
+from django.db.models import Count
 from rest_framework import serializers
 
 from .models import (
@@ -6,6 +7,7 @@ from .models import (
     Product,
     ProductImage,
     ProductVariation,
+    Review,
 )
 
 
@@ -155,8 +157,24 @@ class ProductListSerializer(serializers.ModelSerializer):
         return min(prices) if prices else None
 
 
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ("id", "reviewer_name", "rating", "comment", "created_at")
+
+
+class ReviewCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ("reviewer_name", "rating", "comment")
+
+
 class ProductDetailSerializer(ProductListSerializer):
     variations = ProductVariationSerializer(many=True, read_only=True)
+    reviews = ReviewSerializer(many=True, read_only=True)
+    rating_breakdown = serializers.SerializerMethodField()
+    previous_slug = serializers.SerializerMethodField()
+    next_slug = serializers.SerializerMethodField()
 
     class Meta(ProductListSerializer.Meta):
         fields = ProductListSerializer.Meta.fields + (
@@ -164,4 +182,31 @@ class ProductDetailSerializer(ProductListSerializer):
             "meta_title",
             "meta_description",
             "variations",
+            "review_count",
+            "reviews",
+            "rating_breakdown",
+            "previous_slug",
+            "next_slug",
         )
+
+    def get_rating_breakdown(self, obj):
+        counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        for row in obj.reviews.values("rating").annotate(count=Count("id")):
+            counts[row["rating"]] = row["count"]
+        return counts
+
+    def get_previous_slug(self, obj):
+        prev = (
+            Product.objects.filter(is_active=True, created_at__gt=obj.created_at)
+            .order_by("created_at")
+            .first()
+        )
+        return prev.slug if prev else None
+
+    def get_next_slug(self, obj):
+        nxt = (
+            Product.objects.filter(is_active=True, created_at__lt=obj.created_at)
+            .order_by("-created_at")
+            .first()
+        )
+        return nxt.slug if nxt else None

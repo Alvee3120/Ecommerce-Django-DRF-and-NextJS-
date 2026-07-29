@@ -8,6 +8,7 @@ from .models import (
     Product,
     ProductImage,
     ProductVariation,
+    Review,
     Tag,
 )
 
@@ -81,6 +82,16 @@ class ProductVariationInline(admin.TabularInline):
     filter_horizontal = ("attribute_values",)
 
 
+class ReviewInline(admin.TabularInline):
+    model = Review
+    extra = 0
+    fields = ("reviewer_name", "rating", "comment", "created_at")
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
@@ -90,10 +101,20 @@ class ProductAdmin(admin.ModelAdmin):
         "stock",
         "badge",
         "average_rating",
+        "review_count",
         "is_active",
     )
     list_filter = ("product_type", "is_active", "badge", "categories", "tags")
     search_fields = ("name", "slug", "sku")
     prepopulated_fields = {"slug": ("name",)}
     filter_horizontal = ("categories", "tags")
-    inlines = [ProductImageInline, ProductVariationInline]
+    readonly_fields = ("review_count",)
+    inlines = [ProductImageInline, ProductVariationInline, ReviewInline]
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ("product", "reviewer_name", "rating", "created_at")
+    list_filter = ("rating",)
+    search_fields = ("reviewer_name", "product__name")
+    autocomplete_fields = ("product",)
